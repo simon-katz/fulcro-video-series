@@ -4,22 +4,41 @@
    [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
    [com.fulcrologic.fulcro.dom :as dom]
    [com.fulcrologic.fulcro.algorithms.merge :as merge]
+   [com.fulcrologic.fulcro.mutations :as m :refer [defmutation]]
    [com.fulcrologic.fulcro.algorithms.data-targeting :as targeting]))
 
+
 (defsc Car [this {:car/keys [id model] :as props}]
-  {:query [:car/id :car/model]
-   :ident :car/id}
+  {:query         [:car/id :car/model]
+   :ident         :car/id
+   :initial-state (fn [car-props]
+                    (println "==== car-props =" car-props)
+                    car-props)}
   (dom/div
    "Model " model))
 
 (def ui-car (comp/factory Car {:keyfn :car/id}))
 
+(defmutation make-older [{:person/keys [id]}]
+  (action [{:keys [state]}]
+          (swap! state update-in [:person/id id :person/age] inc)))
+
 (defsc Person [this {:person/keys [id name age cars] :as props}]
-  {:query [:person/id :person/name :person/age {:person/cars (comp/get-query Car)}]
-   :ident :person/id}
+  {:query         [:person/id :person/name :person/age {:person/cars (comp/get-query Car)}]
+   :ident         :person/id
+   :initial-state (fn [person-props]
+                    (println "==== person-props =" person-props)
+                    (merge
+                     person-props
+                     {:person/age  20
+                      :person/cars (for [m [#:car{:id 40 :model "Leaf"}
+                                            #:car{:id 41 :model "Escort"}
+                                            #:car{:id 42 :model "Sienna"}]]
+                                     (comp/get-initial-state Car m))}))}
   (dom/div
    (dom/div "Name: " name)
    (dom/div "Age: " age)
+   (dom/button {:onClick #(comp/transact! this [(make-older {:person/id id})])} "Make older")
    (dom/h3 "Cars")
    (dom/ul
     (map ui-car cars))))
@@ -27,9 +46,15 @@
 (def ui-person (comp/factory Person {:keyfn :person/id}))
 
 (defsc Sample [this {:root/keys [person]}]
-  {:query [{:root/person (comp/get-query Person)}]}
+  {:query         [{:root/person (comp/get-query Person)}]
+   :initial-state (fn [_]
+                    (println "==== top-level props =" _)
+                    {:root/person (comp/get-initial-state
+                                   Person
+                                   #:person{:id 1 :name "Bob"})})}
   (dom/div
-   (ui-person person)))
+   (when person
+     (ui-person person))))
 
 (defonce APP (app/fulcro-app))
 
@@ -38,49 +63,18 @@
 
 (comment
 
-  ;; Examples of playing around with data, and with normalized data.
-  ;; We are performing surgery on the Fulcro DB.
-  ;; Not how you actually write a Fulcro app.
+  (comp/transact! APP [(make-older {:person/id 1})])
 
-  (keys APP)
+  (app/current-state APP)
 
-  (reset! (::app/state-atom APP) {})
+  (merge/merge-component! APP Person {:person/id 1 :person/age 20})
 
-  @(::app/state-atom APP)
+  (comp/get-initial-state Car #:car{:id 78 :model "Cortina"})
+  (comp/get-initial-state Person #:person{:id 1 :name "Bob"})
+  (comp/get-initial-state Sample)
 
-  (reset! (::app/state-atom APP) {:sample
-                                  {:person/name "Joe"
-                                   :person/cars [{:car/id    22
-                                                  :car/model "Escort"}
-                                                 {:car/id    23
-                                                  :car/model "Focus"}]}})
-
-  @(::app/state-atom APP)
-
-  (merge/merge-component! APP Person {:person/id   2
-                                      :person/name "Bob"
-                                      :person/age  21
-                                      :person/cars [{:car/id    1
-                                                     :car/model "F-150"}]}
-                          :replace [:root/person])
-
-  @(::app/state-atom APP)
-
-  (merge/merge-component! APP Car {:car/id    3
-                                   :car/model "Cortina"}
-                          :append [:person/id 2 :person/cars])
-
-  @(::app/state-atom APP)
-
-  (app/schedule-render! APP)
-
-  (comp/get-query Person)
-
-  (comp/get-ident Car {:car/id 100 :anything 1000})
-
-  (meta (comp/get-query Person))
-
-  ;; It's just simpleClojure data:
-  (do (swap! (::app/state-atom APP) update-in [:person/id 2 :person/age] inc)
-      (app/schedule-render! APP))
-  )
+  ;; Calling a mutation function returns data that represents the
+  ;; desired mutation. See your notes.
+  (make-older {:person/id 1})
+  ;; => (app.client/make-older #:person{:id 1})
+)
