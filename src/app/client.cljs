@@ -11,9 +11,10 @@
 (defsc Car [this {:car/keys [id model] :as props}]
   {:query         [:car/id :car/model]
    :ident         :car/id
-   :initial-state (fn [car-props]
+   :initial-state (fn [{:keys [id model] :as car-props}]
                     (println "==== car-props =" car-props)
-                    car-props)}
+                    {:car/id    id
+                     :car/model model})}
   (dom/div
    "Model " model))
 
@@ -26,15 +27,15 @@
 (defsc Person [this {:person/keys [id name age cars] :as props}]
   {:query         [:person/id :person/name :person/age {:person/cars (comp/get-query Car)}]
    :ident         :person/id
-   :initial-state (fn [person-props]
+   :initial-state (fn [{:keys [id name] :as person-props}]
                     (println "==== person-props =" person-props)
-                    (merge
-                     person-props
-                     {:person/age  20
-                      :person/cars (for [m [#:car{:id 40 :model "Leaf"}
-                                            #:car{:id 41 :model "Escort"}
-                                            #:car{:id 42 :model "Sienna"}]]
-                                     (comp/get-initial-state Car m))}))}
+                    {:person/id   id
+                     :person/name name
+                     :person/age  20
+                     :person/cars (for [m [{:id 40 :model "Leaf"}
+                                           {:id 41 :model "Escort"}
+                                           {:id 42 :model "Sienna"}]]
+                                    (comp/get-initial-state Car m))})}
   (dom/div
    (dom/div "Name: " name)
    (dom/div "Age: " age)
@@ -51,7 +52,7 @@
                     (println "==== top-level props =" _)
                     {:root/person (comp/get-initial-state
                                    Person
-                                   #:person{:id 1 :name "Bob"})})}
+                                   {:id 1 :name "Bob"})})}
   (dom/div
    (when person
      (ui-person person))))
@@ -69,8 +70,8 @@
 
   (merge/merge-component! APP Person {:person/id 1 :person/age 20})
 
-  (comp/get-initial-state Car #:car{:id 78 :model "Cortina"})
-  (comp/get-initial-state Person #:person{:id 1 :name "Bob"})
+  (comp/get-initial-state Car {:id 78 :model "Cortina"})
+  (comp/get-initial-state Person {:id 1 :name "Bob"})
   (comp/get-initial-state Sample)
 
   ;; Calling a mutation function returns data that represents the
