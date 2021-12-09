@@ -11,10 +11,8 @@
 (defsc Car [this {:car/keys [id model] :as props}]
   {:query         [:car/id :car/model]
    :ident         :car/id
-   :initial-state (fn [{:keys [id model] :as car-props}]
-                    (println "==== car-props =" car-props)
-                    {:car/id    id
-                     :car/model model})}
+   :initial-state {:car/id    :param/id
+                   :car/model :param/model}}
   (dom/div
    "Model " model))
 
@@ -27,15 +25,12 @@
 (defsc Person [this {:person/keys [id name age cars] :as props}]
   {:query         [:person/id :person/name :person/age {:person/cars (comp/get-query Car)}]
    :ident         :person/id
-   :initial-state (fn [{:keys [id name] :as person-props}]
-                    (println "==== person-props =" person-props)
-                    {:person/id   id
-                     :person/name name
-                     :person/age  20
-                     :person/cars (for [m [{:id 40 :model "Leaf"}
-                                           {:id 41 :model "Escort"}
-                                           {:id 42 :model "Sienna"}]]
-                                    (comp/get-initial-state Car m))})}
+   :initial-state {:person/id   :param/id
+                   :person/name :param/name
+                   :person/age  20
+                   :person/cars [{:id 40 :model "Leaf"}
+                                 {:id 41 :model "Escort"}
+                                 {:id 42 :model "Sienna"}]}}
   (dom/div
    (dom/div "Name: " name)
    (dom/div "Age: " age)
@@ -48,11 +43,7 @@
 
 (defsc Sample [this {:root/keys [person]}]
   {:query         [{:root/person (comp/get-query Person)}]
-   :initial-state (fn [_]
-                    (println "==== top-level props =" _)
-                    {:root/person (comp/get-initial-state
-                                   Person
-                                   {:id 1 :name "Bob"})})}
+   :initial-state {:root/person {:id 1 :name "Bob"}}}
   (dom/div
    (when person
      (ui-person person))))
