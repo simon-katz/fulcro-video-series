@@ -1,5 +1,5 @@
 {:deps    {com.fulcrologic/fulcro {:mvn/version "3.5.9-RC1"}}
 
  :aliases {:dev {:extra-deps {;; org.clojure/clojurescript   {:mvn/version "1.10.520"}
-                              thheller/shadow-cljs        {:mvn/version  "2.16.4"}
-                              binaryage/devtools          {:mvn/version "1.0.0"}}}}}
+                              thheller/shadow-cljs        {:mvn/version "2.16.8"}
+                              binaryage/devtools          {:mvn/version "1.0.4"}}}}}
