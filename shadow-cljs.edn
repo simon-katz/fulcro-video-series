@@ -1,7 +1,8 @@
 {:deps     {:aliases [:dev]}
  :nrepl    {:port 9000}
 
- :dev-http {8000 "resources/public"}
+ :http     {:port 9639} ; shadow control server
+ :dev-http {8009 "resources/public"}
 
  :builds   {:main {:target     :browser
                    :output-dir "resources/public/js/main"
