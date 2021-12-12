@@ -5,6 +5,7 @@
    [com.fulcrologic.fulcro.dom :as dom]
    [com.fulcrologic.fulcro.algorithms.merge :as merge]
    [com.fulcrologic.fulcro.mutations :as m :refer [defmutation]]
+   [com.fulcrologic.fulcro.routing.dynamic-routing :as dr]
    [com.fulcrologic.fulcro.algorithms.data-targeting :as targeting]))
 
 
@@ -51,7 +52,11 @@
 (defonce APP (app/fulcro-app))
 
 (defn ^:export init []
-  (app/mount! APP Sample "app"))
+  ;; Needed for Fulcro Inspect to show the DB after browser refresh:
+  (app/set-root! APP Sample {:initialize-state? true})
+  (dr/initialize! APP)
+  ;; Other init
+  (app/mount! APP Sample "app" {:initialize-state? false}))
 
 (comment
 
