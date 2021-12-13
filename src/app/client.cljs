@@ -5,6 +5,7 @@
    [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
    [com.fulcrologic.fulcro.dom :as dom :refer [div ul li h3 label]]
    [com.fulcrologic.fulcro.algorithms.merge :as merge]
+   [com.fulcrologic.fulcro.rendering.ident-optimized-render :as ident-optimized-render]
    [com.fulcrologic.fulcro.rendering.keyframe-render :as keyframe]
    [com.fulcrologic.fulcro.algorithms.denormalize :as fdn]
    [com.fulcrologic.fulcro.mutations :as m :refer [defmutation]]
@@ -43,8 +44,7 @@
                    age)
               (dom/button :.ui.button {:onClick (fn []
                                                   (comp/transact! this
-                                                                  `[(make-older ~{:person/id id})]
-                                                                  {:refresh [:person-list/people]}))}
+                                                                  `[(make-older ~{:person/id id})]))}
                           "Make Older")
               (h3 {} "Cars")
               (ul {}
@@ -58,18 +58,10 @@
    :initial-state {:person-list/people [{:id 1 :name "Bob"}
                                         {:id 2 :name "Sally"}]}}
   (js/console.log "Render list")
-  (let [cnt (reduce
-             (fn [c {:person/keys [age]}]
-               (if (> age 30)
-                 (inc c)
-                 c))
-             0
-             people)]
-    (div :.ui.segment
-         (h3 :.ui.header "People")
-         (div "Over 30: " cnt)
-         (dom/ul
-          (map ui-person people)))))
+  (div :.ui.segment
+       (h3 :.ui.header "People")
+       (dom/ul
+        (map ui-person people))))
 
 (def ui-person-list (comp/factory PersonList))
 
@@ -81,7 +73,7 @@
    (dom/h3 "Application")
    (ui-person-list list)))
 
-(defonce APP (app/fulcro-app))
+(defonce APP (app/fulcro-app {:optimized-render! ident-optimized-render/render!}))
 
 (defmutation make-older [{:person/keys [id]}]
   (action [{:keys [state]}]
