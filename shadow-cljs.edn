@@ -1,7 +1,6 @@
 {:deps     {:aliases [:dev]}
  :nrepl    {:port 9000}
 
- :http     {:port 9639} ; shadow control server
  :builds   {:main {:target     :browser
                    :output-dir "resources/public/js/main"
                    :asset-path "/js/main"
