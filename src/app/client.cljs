@@ -1,37 +1,26 @@
 (ns app.client
   (:require
-   [clojure.data :as data]
+   [app.model.person :refer [make-older]]
    [com.fulcrologic.fulcro.application :as app]
    [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
    [com.fulcrologic.fulcro.dom :as dom :refer [div ul li h3 label]]
+   [com.fulcrologic.fulcro.networking.http-remote :as http]
    [com.fulcrologic.fulcro.algorithms.merge :as merge]
-   [com.fulcrologic.fulcro.rendering.keyframe-render :as keyframe]
-   [com.fulcrologic.fulcro.algorithms.denormalize :as fdn]
    [com.fulcrologic.fulcro.mutations :as m :refer [defmutation]]
-   [com.fulcrologic.fulcro.routing.dynamic-routing :as dr]
-   [com.fulcrologic.fulcro.algorithms.data-targeting :as targeting]))
+   [com.fulcrologic.fulcro.algorithms.data-targeting :as targeting]
+   [com.fulcrologic.fulcro.data-fetch :as df]))
 
 (defsc Car [this {:car/keys [id model] :as props}]
-  {:query         [:car/id :car/model]
-   :ident         :car/id
-   :initial-state {:car/id    :param/id
-                   :car/model :param/model}}
-  (js/console.log "Render car " id)
+  {:query [:car/id :car/model]
+   :ident :car/id}
   (dom/div
    "Model " model))
 
 (def ui-car (comp/factory Car {:keyfn :car/id}))
 
 (defsc Person [this {:person/keys [id name age cars] :as props}]
-  {:query         [:person/id :person/name :person/age {:person/cars (comp/get-query Car)}]
-   :ident         :person/id
-   :initial-state {:person/id   :param/id
-                   :person/name :param/name
-                   :person/age  20
-                   :person/cars [{:id 40 :model "Leaf"}
-                                 {:id 41 :model "Escort"}
-                                 {:id 42 :model "Sienna"}]}}
-  (js/console.log "Render person " id)
+  {:query [:person/id :person/name :person/age {:person/cars (comp/get-query Car)}]
+   :ident :person/id}
   (let [onClick (comp/get-state this :onClick)]
     (div :.ui.segment
          (div :.ui.form
@@ -43,7 +32,7 @@
                    age)
               (dom/button :.ui.button {:onClick (fn []
                                                   (comp/transact! this
-                                                                  `[(make-older ~{:person/id id})]
+                                                                  [(make-older {:person/id id})]
                                                                   {:refresh [:person-list/people]}))}
                           "Make Older")
               (h3 {} "Cars")
@@ -55,9 +44,7 @@
 (defsc PersonList [this {:person-list/keys [people]}]
   {:query         [{:person-list/people (comp/get-query Person)}]
    :ident         (fn [] [:component/id ::person-list])
-   :initial-state {:person-list/people [{:id 1 :name "Bob"}
-                                        {:id 2 :name "Sally"}]}}
-  (js/console.log "Render list")
+   :initial-state {:person-list/people []}}
   (let [cnt (reduce
              (fn [c {:person/keys [age]}]
                (if (> age 30)
@@ -76,72 +63,17 @@
 (defsc Root [this {:root/keys [list]}]
   {:query         [{:root/list (comp/get-query PersonList)}]
    :initial-state {:root/list {}}}
-  (js/console.log "Render root")
   (dom/div
    (dom/h3 "Application")
    (ui-person-list list)))
 
-(defonce APP (app/fulcro-app))
-
-(defmutation make-older [{:person/keys [id]}]
-  (action [{:keys [state]}]
-          (swap! state update-in [:person/id id :person/age] inc)))
+(defonce APP (app/fulcro-app {:remotes          {:remote (http/fulcro-http-remote {})}
+                              :client-did-mount (fn [app]
+                                                  (df/load! app :all-people Person
+                                                            {:target [:component/id ::person-list :person-list/people]}))}))
 
 (defn ^:export init []
-  (js/console.log "==== init")
-  ;; Needed for Fulcro Inspect to show the DB after browser refresh:
-  (app/set-root! APP Root {:initialize-state? true})
-  (dr/initialize! APP)
-  ;; Other init
   (app/mount! APP Root "app"))
 
-(defn get-components-that-query-for-a-prop
-  [prop]
-  (reduce
-   (fn [mounted-instances cls]
-     (concat mounted-instances
-             (comp/class->all APP (comp/registry-key->class cls))))
-   []
-   (comp/prop->classes APP prop)))
-
-(comment ; from "Components, DOM, and React" video and before
-
-  (comp/component-options Person)
-
-  (comp/transact! APP [(make-older {:person/id 1})])
-
-  (app/current-state APP)
-
-  (merge/merge-component! APP Person {:person/id 1 :person/age 20})
-
-  (comp/get-initial-state Car {:id 78 :model "Cortina"})
-  (comp/get-initial-state Person {:id 1 :name "Bob"})
-  (comp/get-initial-state Root)
-
-  ;; Calling a mutation function returns data that represents the
-  ;; desired mutation. See your notes.
-  (make-older {:person/id 1})
-  ;; => (app.client/make-older #:person{:id 1})
+(comment
   )
-
-(comment ; from "How Rendering Works" video
-
-  ;; This stuff shows the kind of thing that Fulcro does when deciding what to
-  ;; re-render.
-
-  (get-components-that-query-for-a-prop :person/age)
-
-  (def before (app/current-state APP))
-  (comp/transact! APP [(make-older {:person/id 1})])
-  (def after (app/current-state APP))
-  (data/diff before after)
-
-  (map
-   comp/get-ident
-   (get-components-that-query-for-a-prop :person/name))
-
-  (let [state           (app/current-state APP)
-        component-query (comp/get-query Person)
-        component-ident [:person/id 1]
-        starting-entity (get-in state component-ident)]
-    (fdn/db->tree component-query starting-entity state)))
