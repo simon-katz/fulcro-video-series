@@ -23,12 +23,12 @@
                                                    ids))))]
     person))
 
-(pc/defresolver all-people-resolver [env {:person/keys [id]}]
+(pc/defresolver all-people-resolver [env {}]
   {::pc/output [{:all-people [:person/id]}]}
   {:all-people
    (mapv (fn [i] {:person/id i}) (keys @people))})
 
-(pc/defresolver current-system-time [env {:person/keys [id]}]
+(pc/defresolver current-system-time [env {}]
   {::pc/output [:server/time]}
   {:server/time (java.util.Date.)})
 
