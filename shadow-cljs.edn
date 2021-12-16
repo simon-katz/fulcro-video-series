@@ -7,4 +7,5 @@
 
                    :modules    {:main {:init-fn app.client/init}}
                    :devtools   {:after-load app.client/init
-                                :preloads   [com.fulcrologic.fulcro.inspect.preload]}}}}
+                                :preloads   [com.fulcrologic.fulcro.inspect.preload
+                                             com.fulcrologic.fulcro.inspect.dom-picker-preload]}}}}
