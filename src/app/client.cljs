@@ -8,6 +8,8 @@
    [com.fulcrologic.fulcro.mutations :as m :refer [defmutation]]
    [com.fulcrologic.fulcro.data-fetch :as df]))
 
+;;;; ___________________________________________________________________________
+
 (defsc Car [this {:car/keys [id model] :as props}]
   {:query [:car/id :car/model]
    :ident :car/id}
@@ -15,6 +17,8 @@
    "Model " model))
 
 (def ui-car (comp/factory Car {:keyfn :car/id}))
+
+;;;; ___________________________________________________________________________
 
 (defsc PersonDetail [this {:person/keys [id name age cars] :as props}]
   {:query [:person/id :person/name :person/age {:person/cars (comp/get-query Car)}]
@@ -41,17 +45,23 @@
 
 (def ui-person-detail (comp/factory PersonDetail {:keyfn :person/id}))
 
+;;;; ___________________________________________________________________________
+
 (defsc PersonListItem [this {:person/keys [id name]}]
   {:query [:person/id :person/name]
    :ident :person/id}
   (li :.item
       (a {:href    "#"
           :onClick (fn []
-                     (df/load! this [:person/id id] PersonDetail
-                               {:target (picker-path :person-picker/selected-person)}))}
+                     (case 1
+                       1 (comp/transact! this [(select-person {:person/id id})])
+                       2 (df/load! this [:person/id id] PersonDetail
+                                   {:target (picker-path :person-picker/selected-person)})))}
          name)))
 
 (def ui-person-list-item (comp/factory PersonListItem {:keyfn :person/id}))
+
+;;;; ___________________________________________________________________________
 
 (defsc PersonList [this {:person-list/keys [people]}]
   {:query         [{:person-list/people (comp/get-query PersonListItem)}]
@@ -64,6 +74,8 @@
 
 (def ui-person-list (comp/factory PersonList))
 
+;;;; ___________________________________________________________________________
+
 (defsc PersonPicker [this {:person-picker/keys [list selected-person]}]
   {:query         [{:person-picker/list (comp/get-query PersonList)}
                    {:person-picker/selected-person (comp/get-query PersonDetail)}]
@@ -73,9 +85,13 @@
        (div :.column
             (ui-person-list list))
        (div :.column
-            (ui-person-detail selected-person))))
+            (if selected-person
+              (ui-person-detail selected-person)
+              (div :.ui.segment "No selection")))))
 
 (def ui-person-picker (comp/factory PersonPicker {:keyfn :person-picker/people}))
+
+;;;; ___________________________________________________________________________
 
 (defsc Root [this {:root/keys [person-picker]}]
   {:query         [{:root/person-picker (comp/get-query PersonPicker)}]
@@ -84,13 +100,19 @@
        (h3 "Application")
        (ui-person-picker person-picker)))
 
+;;;; ___________________________________________________________________________
+
 (defonce APP (app/fulcro-app {:remotes          {:remote (http/fulcro-http-remote {})}
                               :client-did-mount (fn [app]
                                                   (df/load! app :all-people PersonListItem
                                                             {:target [:component/id :person-list :person-list/people]}))}))
 
+;;;; ___________________________________________________________________________
+
 (defn ^:export init []
   (app/mount! APP Root "app"))
+
+;;;; ___________________________________________________________________________
 
 (comment
   (df/load! APP [:person/id 1] PersonDetail))
