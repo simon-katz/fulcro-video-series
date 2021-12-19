@@ -21,7 +21,10 @@
 ;;;; ___________________________________________________________________________
 
 (defsc PersonDetail [this {:person/keys [id name age cars] :as props}]
-  {:query [:person/id :person/name :person/age {:person/cars (comp/get-query Car)}]
+  {:query [:person/id
+           :person/name
+           :person/age
+           {:person/cars (comp/get-query Car)}]
    :ident :person/id}
   (let [onClick (comp/get-state this :onClick)]
     (dom/div :.ui.segment
@@ -34,11 +37,12 @@
           (dom/div :.field
             (dom/label "Age: ")
             age)
-          (dom/button :.ui.button {:onClick (fn []
-                                              (comp/transact! this
-                                                              [(make-older {:person/id id})]
-                                                              {:refresh [:person-list/people]}))}
-                      "Make Older")
+          (dom/button :.ui.button
+            {:onClick (fn []
+                        (comp/transact! this
+                                        [(make-older {:person/id id})]
+                                        {:refresh [:person-list/people]}))}
+            "Make Older")
           (dom/h3 {} "Cars")
           (dom/ul {}
             (map ui-car cars)))))))
@@ -51,12 +55,14 @@
   {:query [:person/id :person/name]
    :ident :person/id}
   (dom/li :.item
-    (dom/a {:href    "#"
-            :onClick (fn []
-                       (case 1
-                         1 (comp/transact! this [(select-person {:person/id id})])
-                         2 (df/load! this [:person/id id] PersonDetail
-                                     {:target (picker-path :person-picker/selected-person)})))}
+    (dom/a
+        {:href    "#"
+         :onClick (fn []
+                    (case 1
+                      1 (comp/transact! this [(select-person {:person/id id})])
+                      2 (df/load! this [:person/id id] PersonDetail
+                                  {:target (picker-path
+                                            :person-picker/selected-person)})))}
       name)))
 
 (def ui-person-list-item (comp/factory PersonListItem {:keyfn :person/id}))
@@ -78,7 +84,8 @@
 
 (defsc PersonPicker [this {:person-picker/keys [list selected-person]}]
   {:query         [{:person-picker/list (comp/get-query PersonList)}
-                   {:person-picker/selected-person (comp/get-query PersonDetail)}]
+                   {:person-picker/selected-person (comp/get-query
+                                                    PersonDetail)}]
    :initial-state {:person-picker/list {}}
    :ident         (fn [] [:component/id :person-picker])}
   (dom/div :.ui.two.column.container.grid
@@ -89,7 +96,8 @@
         (ui-person-detail selected-person)
         (dom/div :.ui.segment "No selection")))))
 
-(def ui-person-picker (comp/factory PersonPicker {:keyfn :person-picker/people}))
+(def ui-person-picker (comp/factory PersonPicker
+                                    {:keyfn :person-picker/people}))
 
 ;;;; ___________________________________________________________________________
 
@@ -102,10 +110,14 @@
 
 ;;;; ___________________________________________________________________________
 
-(defonce APP (app/fulcro-app {:remotes          {:remote (http/fulcro-http-remote {})}
-                              :client-did-mount (fn [app]
-                                                  (df/load! app :all-people PersonListItem
-                                                            {:target [:component/id :person-list :person-list/people]}))}))
+(defonce APP
+  (app/fulcro-app
+   {:remotes          {:remote (http/fulcro-http-remote {})}
+    :client-did-mount (fn [app]
+                        (df/load! app :all-people PersonListItem
+                                  {:target [:component/id
+                                            :person-list
+                                            :person-list/people]}))}))
 
 ;;;; ___________________________________________________________________________
 
