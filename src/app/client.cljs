@@ -59,7 +59,9 @@
         {:href    "#"
          :onClick (fn []
                     (case 1
-                      1 (comp/transact! this [(select-person {:person/id id})])
+                      1 (comp/transact! this [(select-person
+                                               {:query-class PersonDetail
+                                                :person/id   id})])
                       2 (df/load! this [:person/id id] PersonDetail
                                   {:target (picker-path
                                             :person-picker/selected-person)})))}
