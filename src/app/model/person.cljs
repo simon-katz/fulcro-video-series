@@ -13,11 +13,7 @@
           (swap! state update-in (person-path id :person/age) inc))
   (remote [env] true))
 
-(defmutation select-person [{:keys        [query-class]
-                             :person/keys [id] :as params}]
+(defmutation select-person [{:person/keys [id] :as params}]
   (action [{:keys [app state]}]
           (swap! state assoc-in (picker-path :person-picker/selected-person) [:person/id id]))
-  (remote [env]
-          (-> env
-              (m/with-params {:person/id id}) ; so `:query-class` doesn't go overthe network
-              (m/returning query-class))))
+  (remote [env] true))
