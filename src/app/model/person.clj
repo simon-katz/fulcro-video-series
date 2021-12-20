@@ -43,8 +43,4 @@
   (swap! people update-in [id :person/age] inc)
   {})
 
-(pc/defmutation select-person [env {:person/keys [id]}]
-  {::pc/params [:person/id]}
-  {:person/id id})
-
-(def resolvers [person-resolver all-people-resolver make-older current-system-time select-person])
+(def resolvers [person-resolver all-people-resolver make-older current-system-time])
