@@ -41,6 +41,9 @@
             {:onClick (fn []
                         (comp/transact! this
                                         [(make-older {:person/id id})]
+                                        ;; Is this `:refresh` needed? Maybe it's
+                                        ;; needed with some of the other
+                                        ;; approaches.
                                         {:refresh [:person-list/people]}))}
             "Make Older")
           (dom/h3 {} "Cars")
