@@ -16,5 +16,4 @@
 (defmutation select-person [{:keys        [query-class]
                              :person/keys [id] :as params}]
   (action [{:keys [app state]}]
-          (swap! state assoc-in (picker-path :person-picker/selected-person) [:person/id id])
-          (df/load! app [:person/id id] query-class)))
+          (swap! state assoc-in (picker-path :person-picker/selected-person) [:person/id id])))

@@ -58,6 +58,7 @@
     (dom/a
         {:href    "#"
          :onClick (fn []
+                    (df/load! this [:person/id id] PersonDetail)
                     (comp/transact! this [(select-person
                                            {:query-class PersonDetail
                                             :person/id   id})]))}
