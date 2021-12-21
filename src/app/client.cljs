@@ -10,7 +10,7 @@
 
 ;;;; ___________________________________________________________________________
 
-(defsc Car [this {:car/keys [id model] :as props}]
+(defsc Car [this {:car/keys [model]}]
   {:query [:car/id :car/model]
    :ident :car/id}
   (dom/div
@@ -20,7 +20,7 @@
 
 ;;;; ___________________________________________________________________________
 
-(defsc PersonDetail [this {:person/keys [id name age cars] :as props}]
+(defsc PersonDetail [this {:person/keys [id name age cars]}]
   {:query [:person/id
            :person/name
            :person/age
@@ -70,7 +70,7 @@
 
 ;;;; ___________________________________________________________________________
 
-(defsc PersonList [this {:person-list/keys [people]}]
+(defsc PersonList [_ {:person-list/keys [people]}]
   {:query         [{:person-list/people (comp/get-query PersonListItem)}]
    :ident         (fn [] [:component/id :person-list])
    :initial-state {:person-list/people []}}
@@ -102,7 +102,7 @@
 
 ;;;; ___________________________________________________________________________
 
-(defsc Root [this {:root/keys [person-picker]}]
+(defsc Root [_ {:root/keys [person-picker]}]
   {:query         [{:root/person-picker (comp/get-query PersonPicker)}]
    :initial-state {:root/person-picker {}}}
   (dom/div :.ui.container.segment
@@ -128,4 +128,5 @@
 ;;;; ___________________________________________________________________________
 
 (comment
+  (df/load! APP [:person/id 1] PersonListItem)
   (df/load! APP [:person/id 1] PersonDetail))

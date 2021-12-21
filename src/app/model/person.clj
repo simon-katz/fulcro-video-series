@@ -41,6 +41,6 @@
   {::pc/params [:person/id]
    ::pc/output []}
   (swap! people update-in [id :person/age] inc)
-  {})
+  {:result 42})
 
 (def resolvers [person-resolver all-people-resolver make-older current-system-time])
