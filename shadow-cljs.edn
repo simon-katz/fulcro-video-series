@@ -1,4 +1,7 @@
 {:deps     {:aliases [:dev]}
+
+ :http {:port 9640}
+
  :nrepl    {:port 9000
             :init-ns user}
 
