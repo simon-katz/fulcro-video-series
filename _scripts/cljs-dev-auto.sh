@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e -x
 
-rm -rf .cpcache
+[ ! -d "node_modules" ] && npm install
 npx shadow-cljs watch main
